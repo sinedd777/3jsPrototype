@@ -70,22 +70,22 @@ for(let i=0;i<100;i++){
 		buildings[i].position.x +=Math.random()*position;
 		buildings[i].position.z +=Math.random()*position;
 		buildings[i].name = i;
-		buildings[i].hover = hover();
+		buildings[i].hover = hover;
 }
 
 
-var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000ff,visible:false } );
 var lineGeometry,line;
-
+let lines=[];
 for(let i=0;i<99;i++){
 	lineGeometry = new THREE.Geometry();
 	lineGeometry.vertices.push(new THREE.Vector3( buildings[i].position.x, buildings[i].geometry.parameters.height, buildings[i].position.z) );
 	lineGeometry.vertices.push(new THREE.Vector3( buildings[i+1].position.x, buildings[i+1].geometry.parameters.height, buildings[i+1].position.z) );
 	// console.log(buildings[i].geometry.parameters.height);
 	line = new THREE.Line( lineGeometry, lineMaterial );
+	lines.push(line);
 	scene.add( line );
 }
-
 for(let i=0;i<100;i++){
 	scene.add(buildings[i]);
 }
@@ -93,17 +93,27 @@ for(let i=0;i<100;i++){
 
 function hover() {
 	// gradient(this,'#000000','#fc0303');
+	// this.material.opacity=1;
+	for(let i=0;i<99;i++){
+		console.log(this.position);
+		console.log(lines[i].geometry.vertices[0]);
+		if(this.position===lines[i].geometry.vertices[0]||this.position===lines[i].geometry.vertices[1]){
+			lines[i].material.visible=true;
+			console.log('works');
+		}
+	}
+	// if(this.position==
 }
 
 var animate = function () {
 
-	// raycaster.setFromCamera(mouse, camera);
-	// var intersects = raycaster.intersectObjects(buildings);
-	// if (intersects.length > 0) {
-	// 	for (var i = 0; i < intersects.length; i++) {
-	// 		intersects[i].object.hover();
-	// 	}
-	// }
+	raycaster.setFromCamera(mouse, camera);
+	var intersects = raycaster.intersectObjects(buildings);
+	if (intersects.length > 0) {
+		for (var i = 0; i < intersects.length; i++) {
+			intersects[i].object.hover();
+		}
+	}
 
 	requestAnimationFrame( animate );
 
