@@ -7,13 +7,19 @@ renderer.setClearColor("#FFFFFF");
 
 document.body.appendChild( renderer.domElement );
 
-camera.position.set( 500, 500, 500 );
-camera.lookAt(500,500,500);
+camera.position.set( 500,500,500 );
+// camera.lookAt(0,0,0);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
+// controls.target.set(1000,200,1000)
+
+function getNormalizedCoords(event){
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
 
 // var keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
 // keyLight.position.set(-100, 0, 100);
@@ -58,6 +64,16 @@ let boxGeometry;
 let material = new THREE.MeshBasicMaterial(
 	{ color: '#b5b5b5', vertexColors: THREE.VertexColors, opacity: 0.8, transparent:true } );
 
+let border1 = new THREE.Mesh(new THREE.BoxBufferGeometry(20,500,20),new THREE.MeshBasicMaterial(
+    { color: '#a22221' } ));
+let border2 = new THREE.Mesh(new THREE.BoxBufferGeometry(20,500,20),new THREE.MeshBasicMaterial(
+    { color: '#a22221' } ));
+border1.position.x=0;
+border2.position.x=500;
+border1.position.z=0;
+border2.position.z=500;
+scene.add(border1);
+scene.add(border2);
 
 let buildings=[];
 let height;
@@ -71,6 +87,7 @@ for(let i=0;i<100;i++){
 		buildings[i].position.z +=Math.random()*position;
 		buildings[i].name = i;
 		buildings[i].hover = hover;
+		buildings[i].revert = revert;
 }
 
 
@@ -90,37 +107,47 @@ for(let i=0;i<100;i++){
 	scene.add(buildings[i]);
 }
 
+let lineNumbers=[];
+
+function revert() {
+    this.material = material;
+    while(lineNumbers.length>0){
+        lines[lineNumbers.pop()].material = lineMaterial;
+    }
+}
 
 function hover() {
-	// gradient(this,'#000000','#fc0303');
-	// this.material.opacity=1;
-	for(let i=0;i<99;i++){
-		console.log(this.position);
-		console.log(lines[i].geometry.vertices[0]);
-		if(this.position===lines[i].geometry.vertices[0]||this.position===lines[i].geometry.vertices[1]){
-			lines[i].material.visible=true;
-			console.log('works');
-		}
-	}
+	this.material= new THREE.MeshBasicMaterial(
+        { color: '#f54242' } );
+    for(let i=0;i<99;i++){
+        if(this.position.x===lines[i].geometry.vertices[0].x && this.position.z===lines[i].geometry.vertices[0].z||this.position.x===lines[i].geometry.vertices[1].x && this.position.z===lines[i].geometry.vertices[1].z){
+            lines[i].material = new THREE.LineBasicMaterial( { color: 0x0000ff} );
+            lineNumbers.push(i);
+        }
+    }
 	// if(this.position==
 }
 
+let object;
 var animate = function () {
 
-	raycaster.setFromCamera(mouse, camera);
-	var intersects = raycaster.intersectObjects(buildings);
-	if (intersects.length > 0) {
-		for (var i = 0; i < intersects.length; i++) {
-			intersects[i].object.hover();
-		}
-	}
+    renderer.domElement.addEventListener('mousemove', function(event) {
 
+        getNormalizedCoords(event);
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(buildings);
+        if (intersects.length > 0) {
+            for (var i = 0; i < intersects.length; i++) {
+                object = intersects[i];
+                intersects[i].object.hover();
+            }
+        }else{
+            object.object.revert();
+        }
+    });
 	requestAnimationFrame( animate );
-
 	controls.update();
-
 	renderer.render(scene, camera);
-
 };
 
 animate();
